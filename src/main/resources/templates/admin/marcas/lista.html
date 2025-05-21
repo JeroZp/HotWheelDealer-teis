@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Marcas - HotWheels</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- DataTables -->
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Estilos personalizados -->
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="admin-sidebar bg-dark text-white py-4">
+            <div class="logo-container text-center mb-4">
+                <a href="/admin" class="text-white text-decoration-none">
+                    <h3><i class="fas fa-car-side"></i> HotWheels</h3>
+                    <small>Panel de Administración</small>
+                </a>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/admin">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/admin/vehiculos">
+                        <i class="fas fa-car"></i> Vehículos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white active" href="/admin/marcas">
+                        <i class="fas fa-tag"></i> Marcas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/admin/modelos">
+                        <i class="fas fa-clone"></i> Modelos
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-white" href="/" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Ver sitio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="admin-content">
+            <!-- Header -->
+            <header class="bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center">
+                <h4 class="m-0">Gestión de Marcas</h4>
+                <div>
+              <span class="text-muted me-3">
+                <i class="fas fa-user-circle"></i> Admin
+              </span>
+                    <a href="/logout" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </a>
+                </div>
+            </header>
+
+            <!-- Contenido -->
+            <div class="p-4">
+                <!-- Alertas -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Acciones -->
+                <div class="mb-4 d-flex justify-content-between align-items-center">
+                    <h5>Listado de Marcas</h5>
+                    <a href="/admin/marcas/nueva" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nueva Marca
+                    </a>
+                </div>
+
+                <!-- Tabla de marcas -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaMarcas">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Logo</th>
+                                    <th>Nombre</th>
+                                    <th>País</th>
+                                    <th>Año Fundación</th>
+                                    <th>Modelos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="marca : ${marcas}" class="fade-in">
+                                    <td th:text="${marca.id}">1</td>
+                                    <td>
+                                        <img th:if="${marca.logoUrl}" th:src="${marca.logoUrl}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+                                        <span th:unless="${marca.logoUrl}" class="badge bg-secondary">Sin logo</span>
+                                    </td>
+                                    <td th:text="${marca.nombre}">Toyota</td>
+                                    <td th:text="${marca.pais}">Japón</td>
+                                    <td th:text="${marca.anioFundacion}">1937</td>
+                                    <td><span class="badge bg-info" th:text="${marca.modelos != null ? marca.modelos.size() : 0}">3</span></td>
+                                    <td class="btn-actions">
+                                        <a th:href="@{/admin/marcas/editar/{id}(id=${marca.id})}" class="btn btn-sm btn-primary"
+                                           data-bs-toggle="tooltip" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a th:href="@{/admin/marcas/eliminar/{id}(id=${marca.id})}" class="btn btn-sm btn-danger"
+                                           data-bs-toggle="tooltip" title="Eliminar"
+                                           onclick="return confirm('¿Está seguro de eliminar esta marca?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        <a th:href="@{/marcas/{id}(id=${marca.id})}" class="btn btn-sm btn-info"
+                                           data-bs-toggle="tooltip" title="Ver" target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        // Inicializar DataTables
+        $(document).ready(function() {
+            $('#tablaMarcas').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+                },
+                order: [[0, 'desc']], // Ordenar por ID descendente
+                columnDefs: [
+                    { orderable: false, targets: [1, 6] } // Columnas de logo y acciones no ordenables
+                ]
+            });
+
+            // Inicializar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html>
