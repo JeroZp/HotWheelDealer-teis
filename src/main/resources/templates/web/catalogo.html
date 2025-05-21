@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Vehículos - HotWheels</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Estilos personalizados -->
+    <link href="/css/catalogo.css" rel="stylesheet">
+</head>
+<body>
+<!-- Navbar -->
+<nav th:insert="~{fragments/layout :: navbar}"></nav>
+
+<!-- Alerts -->
+<div th:insert="~{fragments/layout :: alerts}"></div>
+
+<!-- Main Content -->
+<main>
+    <!-- Header de la página -->
+    <section class="bg-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-2">
+                            <li class="breadcrumb-item"><a href="/" th:text="#{catalogo.breadcrumb.home}">Inicio</a></li>
+                            <li class="breadcrumb-item active" aria-current="page" th:text="#{catalogo.breadcrumb.catalogo}">Catálogo</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h2 mb-0">
+                        <i class="fas fa-car text-primary"></i> <span th:text="#{catalogo.title}">Catálogo de Vehículos</span>
+                        Catálogo de Vehículos
+                    </h1>
+                    <p class="text-muted" th:text="#{catalogo.subtitle}">Explora nuestra selección de vehículos de calidad</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container my-4">
+        <!-- Panel de Filtros -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter"></i> <span th:text="#{catalogo.filtros.title}">Filtros</span>
+                    </h5>
+                    <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="collapse show" id="filtrosCollapse">
+                <div class="card-body">
+                    <form method="GET" action="/catalogo" id="filterForm">
+                        <!-- Conservar parámetros de paginación y vista -->
+                        <input type="hidden" name="page" value="0">
+                        <input type="hidden" name="size" th:value="${vehiculos.size}">
+                        <input type="hidden" name="sort" th:value="${sort}">
+                        <input type="hidden" name="vista" th:value="${vista}">
+
+                        <div class="row">
+                            <!-- Filtro por Marca -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <label for="marcaId" class="form-label" th:text="#{catalogo.label.marca}">Marca</label>
+                                <select class="form-select" id="marcaId" name="marcaId" onchange="actualizarModelos()">
+                                    <option value="">Todas las marcas</option>
+                                    <option th:each="marca : ${marcas}"
+                                            th:value="${marca.id}"
+                                            th:text="${marca.nombre}"
+                                            th:selected="${marcaId != null && marcaId == marca.id}">
+                                        Marca
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro por Modelo -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <label for="modeloId" class="form-label" th:text="#{catalogo.label.modelo}">Modelo</label>
+                                <select class="form-select" id="modeloId" name="modeloId">
+                                    <option value="">Todos los modelos</option>
+                                    <option th:each="modelo : ${modelos}"
+                                            th:value="${modelo.id}"
+                                            th:text="${modelo.nombre}"
+                                            th:selected="${modeloId != null && modeloId == modelo.id}">
+                                        Modelo
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro por Año -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <label class="form-label" th:text="#{catalogo.label.year}">Año</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" name="yearMin" placeholder="Desde" th:value="${yearMin}">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" name="yearMax" placeholder="Hasta" th:value="${yearMax}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filtro por Precio -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <label class="form-label" th:text="#{catalogo.label.precio}">Precio (USD)</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" name="precioMin" placeholder="Desde" th:value="${precioMin}">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" name="precioMax" placeholder="Hasta" th:value="${precioMax}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Filtro por Transmisión -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <label for="transmision" class="form-label" th:text="#{catalogo.label.transmision}">Transmisión</label>
+                                <select class="form-select" id="transmision" name="transmision">
+                                    <option value="">Todas</option>
+                                    <option th:each="tipo : ${tiposTransmision}"
+                                            th:value="${tipo}"
+                                            th:text="${tipo}"
+                                            th:selected="${transmision != null && transmision == tipo.name()}">
+                                        Transmisión
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro por Combustible -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <label for="combustible" class="form-label" th:text="#{catalogo.label.combustible}">Combustible</label>
+                                <select class="form-select" id="combustible" name="combustible">
+                                    <option value="">Todos</option>
+                                    <option th:each="tipo : ${tiposCombustible}"
+                                            th:value="${tipo}"
+                                            th:text="${tipo}"
+                                            th:selected="${combustible != null && combustible == tipo.name()}">
+                                        Combustible
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="col-lg-6 col-md-12 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search" th:text="#{catalogo.button.buscar}"></i> Buscar
+                                </button>
+                                <a th:href="@{/catalogo}" class="btn btn-outline-secondary ms-2" th:text="#{catalogo.button.limpiar}">
+                                    <i class="fas fa-times"></i> Limpiar Filtros
+                                </a>
+
+                                <!-- Contador de resultados -->
+                                <div class="ms-auto text-muted">
+                                    <span th:text="${vehiculos.totalElements}">0</span> vehículos encontrados
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Opciones: Ordenamiento y Vista -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- Opciones de Ordenamiento -->
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-sort" th:text="#{catalogo.sort.title}"></i> Ordenar por
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'fechaRegistro' && sortDirection == 'desc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='fechaRegistro,desc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.recientes}">
+                            Más recientes
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'fechaRegistro' && sortDirection == 'asc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='fechaRegistro,asc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.antiguos}">
+                            Más antiguos
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'precio' && sortDirection == 'asc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='precio,asc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.precio.asc}">
+                            Precio: menor a mayor
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'precio' && sortDirection == 'desc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='precio,desc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.precio.desc}">
+                            Precio: mayor a menor
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'year' && sortDirection == 'desc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='year,desc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.year.desc}">
+                            Año: reciente a antiguo
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'year' && sortDirection == 'asc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='year,asc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.year.asc}">
+                            Año: antiguo a reciente
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${sortField == 'visualizaciones' && sortDirection == 'desc' ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort='visualizaciones,desc', marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}" th:text="#{catalogo.sort.popularidad}">
+                            Popularidad
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Opciones por página -->
+            <div class="btn-group mx-2">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-list-ol"></i> <span th:text="${vehiculos.size}">9</span> por página
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:classappend="${vehiculos.size == 6 ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=6, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}">
+                            6 por página
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${vehiculos.size == 9 ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=9, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}">
+                            9 por página
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${vehiculos.size == 12 ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=12, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}">
+                            12 por página
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:classappend="${vehiculos.size == 24 ? 'active' : ''}"
+                           th:href="@{/catalogo(page=0, size=24, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}">
+                            24 por página
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Cambio de vista (Grid/Lista) -->
+            <div class="btn-group">
+                <a th:href="@{/catalogo(page=${currentPage}, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista='grid')}"
+                   class="btn btn-outline-secondary" th:classappend="${vista == 'grid' ? 'active' : ''}" th:text="#{catalogo.vista.grid}">
+                    <i class="fas fa-th-large"></i>
+                </a>
+                <a th:href="@{/catalogo(page=${currentPage}, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista='list')}"
+                   class="btn btn-outline-secondary" th:classappend="${vista == 'list' ? 'active' : ''}" th:text="#{catalogo.vista.list}">
+                    <i class="fas fa-list"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Contenido del Catálogo -->
+        <div class="mb-4">
+            <!-- Vista Grid -->
+            <div class="row" th:if="${vista == 'grid' && !vehiculos.empty}">
+                <div class="col-lg-4 col-md-6 mb-4" th:each="vehiculo : ${vehiculos}">
+                    <div class="card h-100 shadow-sm vehiculo-card"
+                         th:classappend="${!vehiculo.disponible ? 'no-disponible' : ''}">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                             style="height: 200px;">
+                            <i class="fas fa-car text-secondary" style="font-size: 4rem;"></i>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title" th:text="${vehiculo.nombreCompleto}">Nombre del vehículo</h5>
+
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-palette"></i> <span th:text="${vehiculo.color}">Color</span> |
+                                    <i class="fas fa-road"></i> <span th:text="${#numbers.formatInteger(vehiculo.kilometraje, 0, 'COMMA')}">0</span> km
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="badge bg-secondary" th:text="${vehiculo.transmision}">Transmisión</span>
+                                <span class="badge bg-info" th:text="${vehiculo.combustible}">Combustible</span>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="h4 text-primary fw-bold"
+                                              th:text="'$' + ${#numbers.formatDecimal(vehiculo.precio, 0, 'COMMA', 0, 'POINT')}">
+                                            $0
+                                        </span>
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye"></i>
+                                        <span th:text="${vehiculo.visualizaciones}">0</span> vistas
+                                    </small>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <a th:href="@{/vehiculos/{id}(id=${vehiculo.id})}"
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-info-circle"></i> Ver Detalles
+                                    </a>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button type="button"
+                                                    class="btn btn-primary btn-sm w-100"
+                                                    data-accion="agregar-carrito"
+                                                    th:data-vehiculo-id="${vehiculo.id}"
+                                                    th:disabled="${!vehiculo.disponible}">
+                                                <i class="fas fa-cart-plus"></i> Carrito
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="button"
+                                                    class="btn btn-outline-warning btn-sm w-100"
+                                                    data-accion="agregar-comparador"
+                                                    th:data-vehiculo-id="${vehiculo.id}">
+                                                <i class="fas fa-balance-scale"></i> Comparar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista Lista -->
+            <div th:if="${vista == 'list' && !vehiculos.empty}">
+                <div class="card mb-3" th:each="vehiculo : ${vehiculos}">
+                    <div class="row g-0 vehiculo-card" th:classappend="${!vehiculo.disponible ? 'no-disponible' : ''}">
+                        <div class="col-md-3">
+                            <div class="bg-light d-flex align-items-center justify-content-center h-100"
+                                 style="min-height: 180px;">
+                                <i class="fas fa-car text-secondary" style="font-size: 4rem;"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${vehiculo.nombreCompleto}">Nombre del vehículo</h5>
+
+                                <div class="mb-2">
+                                    <span class="badge bg-secondary me-1" th:text="${vehiculo.transmision}">Transmisión</span>
+                                    <span class="badge bg-info me-1" th:text="${vehiculo.combustible}">Combustible</span>
+                                    <span class="badge bg-success" th:if="${vehiculo.disponible}">Disponible</span>
+                                    <span class="badge bg-danger" th:unless="${vehiculo.disponible}">No Disponible</span>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-palette"></i> <strong>Color:</strong>
+                                            <span th:text="${vehiculo.color}">Color</span>
+                                        </small>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-road"></i> <strong>Kilometraje:</strong>
+                                            <span th:text="${#numbers.formatInteger(vehiculo.kilometraje, 0, 'COMMA')}">0</span> km
+                                        </small>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-calendar"></i> <strong>Año:</strong>
+                                            <span th:text="${vehiculo.year}">2020</span>
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye"></i>
+                                        <span th:text="${vehiculo.visualizaciones}">0</span> visualizaciones
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card-body d-flex flex-column h-100">
+                                <div class="h3 text-primary fw-bold mb-auto"
+                                     th:text="'$' + ${#numbers.formatDecimal(vehiculo.precio, 0, 'COMMA', 0, 'POINT')}">
+                                    $0
+                                </div>
+
+                                <div class="d-grid gap-2 mt-3">
+                                    <a th:href="@{/vehiculos/{id}(id=${vehiculo.id})}"
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-info-circle"></i> Ver Detalles
+                                    </a>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button type="button"
+                                                    class="btn btn-primary btn-sm w-100"
+                                                    data-accion="agregar-carrito"
+                                                    th:data-vehiculo-id="${vehiculo.id}"
+                                                    th:disabled="${!vehiculo.disponible}">
+                                                <i class="fas fa-cart-plus"></i>
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="button"
+                                                    class="btn btn-outline-warning btn-sm w-100"
+                                                    data-accion="agregar-comparador"
+                                                    th:data-vehiculo-id="${vehiculo.id}">
+                                                <i class="fas fa-balance-scale"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay resultados -->
+            <div class="text-center py-5" th:if="${vehiculos.empty()}">
+                <i class="fas fa-search text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                <h3 class="mt-3" th:text="#{catalogo.noresultados.title}">No se encontraron vehículos</h3>
+                <p class="text-muted" th:text="#{catalogo.noresultados.text}">Intenta ajustar los filtros para obtener más resultados.</p>
+                <a href="/catalogo" class="btn btn-primary">
+                    <i class="fas fa-times"></i> Limpiar Filtros
+                </a>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        <div class="d-flex justify-content-center" th:if="${totalPages > 0}">
+            <nav>
+                <ul class="pagination">
+                    <!-- Primera página -->
+                    <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="@{/catalogo(page=0, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}"
+                           aria-label="Primera">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+
+                    <!-- Página anterior -->
+                    <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="@{/catalogo(page=${currentPage - 1}, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}"
+                           aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <!-- Números de página -->
+                    <li class="page-item"
+                        th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:if="${i == 0 || i == totalPages - 1 || (i >= currentPage - 2 && i <= currentPage + 2)}"
+                        th:classappend="${i == currentPage ? 'active' : ''}">
+                        <a class="page-link"
+                           th:href="@{/catalogo(page=${i}, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}"
+                           th:text="${i + 1}">1</a>
+                    </li>
+
+                    <!-- Página siguiente -->
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="@{/catalogo(page=${currentPage + 1}, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}"
+                           aria-label="Siguiente">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+
+                    <!-- Última página -->
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="@{/catalogo(page=${totalPages - 1}, size=${vehiculos.size}, sort=${sort}, marcaId=${marcaId}, modeloId=${modeloId}, yearMin=${yearMin}, yearMax=${yearMax}, precioMin=${precioMin}, precioMax=${precioMax}, transmision=${transmision}, combustible=${combustible}, vista=${vista})}"
+                           aria-label="Última">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<div th:insert="~{fragments/layout :: footer}"></div>
+
+<!-- Scripts -->
+<div th:insert="~{fragments/layout :: scripts}"></div>
+
+<!-- Script específico para el catálogo -->
+<script>
+    function actualizarModelos() {
+        const marcaId = document.getElementById('marcaId').value;
+        const modeloSelect = document.getElementById('modeloId');
+
+        // Limpiar opciones actuales
+        modeloSelect.innerHTML = '<option value="">Todos los modelos</option>';
+
+        if (!marcaId) return;
+
+        // Mostrar indicador de carga
+        modeloSelect.innerHTML = '<option value="">Cargando...</option>';
+        modeloSelect.disabled = true;
+
+        // Buscar modelos por marca
+        fetch(`/vehiculos/api/modelos/${marcaId}`)
+            .then(response => response.json())
+            .then(modelos => {
+                modeloSelect.innerHTML = '<option value="">Todos los modelos</option>';
+                modelos.forEach(modelo => {
+                    const option = document.createElement('option');
+                    option.value = modelo.id;
+                    option.textContent = modelo.nombre;
+                    modeloSelect.appendChild(option);
+                });
+                modeloSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error al cargar modelos:', error);
+                modeloSelect.innerHTML = '<option value="">Error al cargar modelos</option>';
+                modeloSelect.disabled = false;
+            });
+    }
+
+    // Inicializar componentes cuando se carga la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Si hay parámetros de filtro en la URL, mostrar el panel de filtros
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('marcaId') || urlParams.has('modeloId') ||
+            urlParams.has('yearMin') || urlParams.has('yearMax') ||
+            urlParams.has('precioMin') || urlParams.has('precioMax') ||
+            urlParams.has('transmision') || urlParams.has('combustible')) {
+
+            const filtrosCollapse = document.getElementById('filtrosCollapse');
+            if (filtrosCollapse) {
+                new bootstrap.Collapse(filtrosCollapse, { show: true });
+            }
+        }
+    });
+</script>
+</body>
+</html>

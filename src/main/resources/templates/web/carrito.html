@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Carrito - HotWheels</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Estilos personalizados -->
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <!-- Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container py-5">
+            <h1 class="mb-4">
+                <i class="fas fa-shopping-cart text-primary me-2"></i> Mi Carrito
+            </h1>
+
+            <!-- Carrito vacío -->
+            <div th:if="${carrito == null || carrito.items == null || carrito.items.isEmpty()}" class="card shadow-sm p-5 text-center">
+                <div class="py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-secondary mb-4"></i>
+                    <h3 class="text-muted">Tu carrito está vacío</h3>
+                    <p class="mb-4">Agrega algunos vehículos para comenzar tu compra</p>
+                    <a href="/catalogo" class="btn btn-primary">
+                        <i class="fas fa-car me-2"></i> Ver Catálogo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Carrito con items -->
+            <div th:if="${carrito != null && carrito.items != null && !carrito.items.isEmpty()}" class="row">
+                <div class="col-lg-8">
+                    <!-- Lista de items -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i> Vehículos en tu carrito
+                                <span class="badge bg-primary ms-2" th:text="${carrito.cantidadItems}">0</span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                <div th:each="item : ${carrito.items}" class="list-group-item carrito-item">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-2 col-sm-3 mb-3 mb-md-0">
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px; width: 100px;">
+                                                <i class="fas fa-car fa-2x text-secondary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-9 mb-3 mb-md-0">
+                                            <h5 class="mb-1">
+                                                <a th:href="@{/vehiculos/{id}(id=${item.vehiculo.id})}" class="text-decoration-none">
+                                                    <span th:text="${item.vehiculo.modelo != null ? item.vehiculo.modelo.marca.nombre + ' ' + item.vehiculo.modelo.nombre : 'Vehículo'}">Marca Modelo</span>
+                                                    <span th:text="${item.vehiculo.year}">Año</span>
+                                                </a>
+                                            </h5>
+                                            <p class="text-muted small mb-1">
+                                                <i class="fas fa-palette me-1"></i> <span th:text="${item.vehiculo.color}">Color</span>
+                                                <i class="fas fa-cog ms-2 me-1"></i> <span th:text="${item.vehiculo.transmision}">Transmisión</span>
+                                                <i class="fas fa-gas-pump ms-2 me-1"></i> <span th:text="${item.vehiculo.combustible}">Combustible</span>
+                                            </p>
+                                            <p class="text-muted small mb-0">
+                                                <i class="fas fa-tachometer-alt me-1"></i> <span th:text="${#numbers.formatInteger(item.vehiculo.kilometraje, 0, 'COMMA')}">0</span> km
+                                            </p>
+                                        </div>
+                                        <div class="col-md-2 text-end text-md-center mb-3 mb-md-0">
+                                            <span class="h5 text-primary fw-bold" th:text="${'$' + #numbers.formatDecimal(item.precio, 0, 'COMMA', 0, 'POINT')}">$0</span>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <form th:action="@{/carrito/remover/{id}(id=${item.vehiculo.id})}" method="post">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        onclick="return confirm('¿Estás seguro de eliminar este vehículo del carrito?')">
+                                                    <i class="fas fa-trash"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Resumen del carrito -->
+                    <div class="card shadow-sm mb-4 carrito-total">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Resumen</h5>
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Total de vehículos:</span>
+                                <span class="fw-bold" th:text="${carrito.cantidadItems}">0</span>
+                            </div>
+
+                            <hr>
+
+                            <div class="d-flex justify-content-between mb-4">
+                                <span class="h5">Total:</span>
+                                <span class="h5 text-primary fw-bold" th:text="${'$' + #numbers.formatDecimal(carrito.total, 0, 'COMMA', 0, 'POINT')}">$0</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a href="/ordenes/checkout" class="btn btn-primary">
+                                    <i class="fas fa-shopping-bag me-2"></i> Finalizar Compra
+                                </a>
+
+                                <form th:action="@{/carrito/limpiar}" method="post">
+                                    <button type="submit" class="btn btn-outline-secondary w-100"
+                                            onclick="return confirm('¿Estás seguro de vaciar tu carrito?')">
+                                        <i class="fas fa-trash-alt me-2"></i> Vaciar Carrito
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seguir comprando -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <a href="/catalogo" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-arrow-left me-2"></i> Seguir Comprando
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
