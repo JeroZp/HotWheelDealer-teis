@@ -1,0 +1,97 @@
+/* Estilos específicos para el catálogo */
+
+/* Filtros */
+.filter-section {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Cards en grid */
+.vehiculo-card {
+    transition: all 0.3s ease;
+}
+
+.vehiculo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Vista de lista */
+.vehiculo-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Estado de vehículos */
+.vehiculo-card.no-disponible {
+    opacity: 0.6;
+}
+
+.vehiculo-card.no-disponible::after {
+    content: "VENDIDO";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-25deg);
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+/* Paginación */
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.pagination .page-link {
+    color: var(--primary-color);
+}
+
+.pagination .page-link:hover {
+    color: #e63939;
+}
+
+/* Dropdown de ordenamiento */
+.dropdown-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: var(--primary-color);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.row .vehiculo-card {
+    animation: fadeIn 0.6s ease forwards;
+    opacity: 0;
+}
+
+/* Aplicar delays diferentes a cada tarjeta */
+.row .vehiculo-card:nth-child(1) { animation-delay: 0.1s; }
+.row .vehiculo-card:nth-child(2) { animation-delay: 0.2s; }
+.row .vehiculo-card:nth-child(3) { animation-delay: 0.3s; }
+.row .vehiculo-card:nth-child(4) { animation-delay: 0.4s; }
+.row .vehiculo-card:nth-child(5) { animation-delay: 0.5s; }
+.row .vehiculo-card:nth-child(6) { animation-delay: 0.6s; }
+
+@media (max-width: 768px) {
+    .vehiculo-card {
+        animation-delay: 0s !important; /* No delay on mobile */
+    }
+}
