@@ -34,7 +34,7 @@ public class InternationalizationConfig implements WebMvcConfigurer {
     @Bean
     public MessageSource messageSource(){
         ReloadableResourceBundleMessageSource source = new ReloadableResourceBundleMessageSource();
-        source.setBasename("classpath:messages");
+        source.setBasename("classpath:i18n/messages");
         source.setDefaultEncoding("UTF-8");
         return source;
     }
