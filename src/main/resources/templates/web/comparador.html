@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Vehículos - HotWheels</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Estilos personalizados -->
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav th:insert="~{fragments/layout :: navbar}"></nav>
+
+    <!-- Alerts -->
+    <div th:insert="~{fragments/layout :: alerts}"></div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Header de la página -->
+        <section class="bg-light py-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-2">
+                                <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Comparador</li>
+                            </ol>
+                        </nav>
+                        <h1 class="h2 mb-0">
+                            <i class="fas fa-balance-scale text-warning"></i>
+                            Comparador de Vehículos
+                        </h1>
+                        <p class="text-muted">Compara hasta 3 vehículos lado a lado</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container my-4">
+            <!-- Selector de vehículos -->
+            <div class="card filter-section mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-plus-circle text-primary"></i>
+                        Agregar Vehículos al Comparador
+                        <span class="badge bg-warning text-dark ms-2"
+                              th:text="${vehiculosSeleccionados != null ? vehiculosSeleccionados.size() : 0} + '/' + ${maxVehiculos}">
+                                0/3
+                            </span>
+                    </h5>
+
+                    <!-- Dropdown para seleccionar vehículos -->
+                    <div class="row align-items-end">
+                        <div class="col-lg-8 col-md-6 mb-3">
+                            <label for="vehiculoSelect" class="form-label fw-bold">Seleccionar Vehículo</label>
+                            <select class="form-select" id="vehiculoSelect">
+                                <option value="">Selecciona un vehículo...</option>
+                                <!-- Agrupar por marca (sintaxis corregida) -->
+                                <optgroup th:each="entry : ${vehiculosPorMarca}" th:label="${entry.key}">
+                                    <option th:each="vehiculo : ${entry.value}"
+                                            th:value="${vehiculo.id}"
+                                            th:text="${vehiculo.nombreCompleto + ' - $' + #numbers.formatDecimal(vehiculo.precio, 0, 'COMMA', 0, 'POINT')}">
+                                        Vehículo
+                                    </option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <button type="button" class="btn btn-primary" id="btnAgregarComparador" onclick="agregarVehiculoDirecto()">
+                                <i class="fas fa-plus"></i> Agregar al Comparador
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ms-2" id="btnLimpiarComparador" onclick="window.location.href='/comparar'">
+                                <i class="fas fa-trash"></i> Limpiar Todo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Vehículos seleccionados para comparar -->
+                    <div th:if="${vehiculosSeleccionados != null and !vehiculosSeleccionados.isEmpty()}">
+                        <hr>
+                        <h6 class="mb-3">Vehículos Seleccionados:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                                <span th:each="vehiculo : ${vehiculosSeleccionados}"
+                                      class="badge bg-warning text-dark p-2 d-flex align-items-center">
+                                    <span th:text="${vehiculo.nombreCompleto}">Vehículo</span>
+                                    <button type="button" class="btn-close btn-close-white ms-2"
+                                            data-accion="remover-comparador"
+                                            th:data-vehiculo-id="${vehiculo.id}"></button>
+                                </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de comparación -->
+            <div th:if="${vehiculosSeleccionados != null and !vehiculosSeleccionados.isEmpty()}">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">
+                            <i class="fas fa-table text-primary"></i>
+                            Comparación Detallada
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="comparador-table">
+                            <table class="table table-borderless table-hover mb-0">
+                                <thead class="bg-light">
+                                <tr>
+                                    <th scope="col" class="fw-bold text-secondary" style="width: 200px;">Especificación</th>
+                                    <th scope="col" class="text-center comparador-vehiculo"
+                                        th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <div class="p-3">
+                                            <div class="bg-light rounded mb-3" style="height: 120px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-car text-secondary" style="font-size: 3rem;"></i>
+                                            </div>
+                                            <h5 class="mb-1" th:text="${vehiculo.nombreCompleto}">Vehículo</h5>
+                                            <div class="text-primary fw-bold"
+                                                 th:text="'$' + ${#numbers.formatDecimal(vehiculo.precio, 0, 'COMMA', 0, 'POINT')}">
+                                                $0
+                                            </div>
+                                        </div>
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <!-- Información básica -->
+                                <tr class="table-active">
+                                    <td colspan="4" class="fw-bold text-center bg-primary text-white">
+                                        <i class="fas fa-info-circle"></i> INFORMACIÓN BÁSICA
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-industry text-primary"></i> Marca</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}"
+                                        th:text="${vehiculo.getModelo().getMarca().getNombre()}">Marca</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-car text-primary"></i> Modelo</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}"
+                                        th:text="${vehiculo.getModelo().getNombre()}">Modelo</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-calendar text-primary"></i> Año</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}"
+                                        th:text="${vehiculo.getYear()}">2020</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-palette text-primary"></i> Color</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}"
+                                        th:text="${vehiculo.getColor()}">Color</td>
+                                </tr>
+
+                                <!-- Especificaciones técnicas -->
+                                <tr class="table-active">
+                                    <td colspan="4" class="fw-bold text-center bg-success text-white">
+                                        <i class="fas fa-cogs"></i> ESPECIFICACIONES TÉCNICAS
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-road text-primary"></i> Kilometraje</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}"
+                                        th:text="${#numbers.formatInteger(vehiculo.getKilometraje(), 0, 'COMMA')} + ' km'">0 km</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-cogs text-primary"></i> Transmisión</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <span class="badge bg-secondary" th:text="${vehiculo.getTransmision()}">Manual</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-gas-pump text-primary"></i> Combustible</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <span class="badge bg-info" th:text="${vehiculo.getCombustible()}">Gasolina</span>
+                                    </td>
+                                </tr>
+
+                                <!-- Información comercial -->
+                                <tr class="table-active">
+                                    <td colspan="4" class="fw-bold text-center bg-warning text-dark">
+                                        <i class="fas fa-dollar-sign"></i> INFORMACIÓN COMERCIAL
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-tag text-primary"></i> Precio</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                                <span class="h5 text-primary fw-bold"
+                                                      th:text="'$' + ${#numbers.formatDecimal(vehiculo.getPrecio(), 0, 'COMMA', 0, 'POINT')}">
+                                                    $0
+                                                </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-eye text-primary"></i> Visualizaciones</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}"
+                                        th:text="${vehiculo.getVisualizaciones()}">0</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-check-circle text-primary"></i> Disponibilidad</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <span class="badge bg-success" th:if="${vehiculo.getDisponible()}">Disponible</span>
+                                        <span class="badge bg-danger" th:unless="${vehiculo.getDisponible()}">No Disponible</span>
+                                    </td>
+                                </tr>
+
+                                <!-- Acciones -->
+                                <tr class="table-active">
+                                    <td colspan="4" class="fw-bold text-center bg-dark text-white">
+                                        <i class="fas fa-hand-pointer"></i> ACCIONES
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-info-circle text-primary"></i> Ver Detalle</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <a th:href="@{/vehiculos/{id}(id=${vehiculo.getId()})}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-info-circle"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-cart-plus text-primary"></i> Agregar al Carrito</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <button type="button"
+                                                class="btn btn-primary btn-sm"
+                                                data-accion="agregar-carrito"
+                                                th:data-vehiculo-id="${vehiculo.getId()}"
+                                                th:disabled="${!vehiculo.getDisponible()}">
+                                            <i class="fas fa-cart-plus"></i>
+                                            <span th:text="${vehiculo.getDisponible() ? 'Agregar' : 'No Disponible'}">Agregar</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-times text-primary"></i> Remover del Comparador</td>
+                                    <td class="text-center" th:each="vehiculo : ${vehiculosSeleccionados}">
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-sm"
+                                                data-accion="remover-comparador"
+                                                th:data-vehiculo-id="${vehiculo.getId()}">
+                                            <i class="fas fa-times"></i> Remover
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción global -->
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-primary btn-lg me-3" id="btnImprimirComparacion">
+                        <i class="fas fa-print"></i> Imprimir Comparación
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" id="btnLimpiarTodo">
+                        <i class="fas fa-trash"></i> Limpiar Comparador
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estado inicial -->
+            <div class="text-center py-5" th:if="${vehiculosSeleccionados == null or vehiculosSeleccionados.isEmpty()}">
+                <i class="fas fa-balance-scale text-warning" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">Comienza a comparar vehículos</h3>
+                <p class="text-muted">Usa el selector de arriba para agregar hasta 3 vehículos y compararlos lado a lado.</p>
+
+                <!-- Sugerencias rápidas -->
+                <div class="row mt-4 justify-content-center">
+                    <div class="col-lg-8">
+                        <h5 class="mb-3">Sugerencias para comparar:</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <a href="/vehiculos/buscar?marcaId=" class="btn btn-outline-warning w-100">
+                                    <i class="fas fa-car"></i> Ver Todos los Vehículos
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="/vehiculos/buscar?yearMin=2020" class="btn btn-outline-warning w-100">
+                                    <i class="fas fa-calendar"></i> Modelos Recientes
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="/" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-home"></i> Volver al Inicio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:insert="~{fragments/layout :: footer}"></div>
+
+    <!-- Scripts -->
+    <div th:insert="~{fragments/layout :: scripts}"></div>
+
+    <!-- Script específico del comparador -->
+    <script src="/js/comparador.js"></script>
+
+    <!-- Script de respaldo directo -->
+    <script>
+        function agregarVehiculoDirecto() {
+            console.log('Agregar vehiculo directo ejecutado');
+            const select = document.getElementById('vehiculoSelect');
+            const vehiculoId = select.value;
+
+            if (!vehiculoId) {
+                alert('Por favor selecciona un vehículo primero');
+                return;
+            }
+
+            // Obtener vehículos actuales de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const vehiculosActuales = urlParams.getAll('vehiculos');
+
+            // Verificar límite
+            if (vehiculosActuales.length >= 3) {
+                alert('Máximo 3 vehículos para comparar');
+                return;
+            }
+
+            // Verificar si ya está agregado
+            if (vehiculosActuales.includes(vehiculoId)) {
+                alert('Este vehículo ya está en el comparador');
+                return;
+            }
+
+            // Agregar a la lista
+            vehiculosActuales.push(vehiculoId);
+
+            // Redirigir con nuevos parámetros
+            const params = vehiculosActuales.map(id => `vehiculos=${id}`).join('&');
+            window.location.href = `/comparar?${params}`;
+        }
+    </script>
+</body>
+</html>
