@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${vehiculo.id == null ? 'Nuevo Vehículo' : 'Editar Vehículo'} + ' - HotWheels'">Vehículo - HotWheels</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Estilos personalizados -->
+  <link href="/css/styles.css" rel="stylesheet">
+  <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="admin-sidebar bg-dark text-white py-4">
+      <div class="logo-container text-center mb-4">
+        <a href="/admin" class="text-white text-decoration-none">
+          <h3><i class="fas fa-car-side"></i> HotWheels</h3>
+          <small>Panel de Administración</small>
+        </a>
+      </div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link text-white" href="/admin">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white active" href="/admin/vehiculos">
+            <i class="fas fa-car"></i> Vehículos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="/admin/marcas">
+            <i class="fas fa-tag"></i> Marcas
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="/admin/modelos">
+            <i class="fas fa-clone"></i> Modelos
+          </a>
+        </li>
+        <li class="nav-item mt-4">
+          <a class="nav-link text-white" href="/" target="_blank">
+            <i class="fas fa-external-link-alt"></i> Ver sitio
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="/logout">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="admin-content">
+      <!-- Header -->
+      <header class="bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center">
+        <h4 class="m-0" th:text="${vehiculo.id == null ? 'Nuevo Vehículo' : 'Editar Vehículo'}">Vehículo</h4>
+        <div>
+                      <span class="text-muted me-3">
+                          <i class="fas fa-user-circle"></i> Admin
+                      </span>
+          <a href="/logout" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-sign-out-alt"></i> Salir
+          </a>
+        </div>
+      </header>
+
+      <!-- Contenido -->
+      <div class="p-4">
+        <!-- Navegación -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="/admin/vehiculos">Vehículos</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${vehiculo.id == null ? 'Nuevo' : 'Editar'}">Acción</li>
+          </ol>
+        </nav>
+
+        <!-- Formulario -->
+        <div class="card">
+          <div class="card-body">
+            <form th:action="@{/admin/vehiculos/guardar}" th:object="${vehiculo}" method="post">
+              <!-- ID oculto para edición -->
+              <input type="hidden" th:field="*{id}" />
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="modelo" class="form-label">Modelo</label>
+                  <select class="form-select" id="modelo" th:field="*{modelo}" required>
+                    <option value="">Seleccione un modelo</option>
+                    <option th:each="modelo : ${modelos}"
+                            th:value="${modelo.id}"
+                            th:text="${modelo.marca.nombre + ' ' + modelo.nombre}">
+                      Modelo
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('modelo')}" th:errors="*{modelo}">
+                    Por favor seleccione un modelo
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="year" class="form-label">Año</label>
+                  <input type="number" class="form-control" id="year" th:field="*{year}"
+                         min="1990" max="2025" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('year')}" th:errors="*{year}">
+                    Ingrese un año válido
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="precio" class="form-label">Precio</label>
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control" id="precio" th:field="*{precio}"
+                           min="0" step="0.01" required>
+                  </div>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('precio')}" th:errors="*{precio}">
+                    Ingrese un precio válido
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="color" class="form-label">Color</label>
+                  <input type="text" class="form-control" id="color" th:field="*{color}" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('color')}" th:errors="*{color}">
+                    Ingrese un color
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="transmision" class="form-label">Transmisión</label>
+                  <select class="form-select" id="transmision" th:field="*{transmision}" required>
+                    <option value="">Seleccione transmisión</option>
+                    <option th:each="tipo : ${tiposTransmision}"
+                            th:value="${tipo}"
+                            th:text="${tipo}">
+                      Transmisión
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('transmision')}" th:errors="*{transmision}">
+                    Seleccione una transmisión
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="combustible" class="form-label">Combustible</label>
+                  <select class="form-select" id="combustible" th:field="*{combustible}" required>
+                    <option value="">Seleccione combustible</option>
+                    <option th:each="tipo : ${tiposCombustible}"
+                            th:value="${tipo}"
+                            th:text="${tipo}">
+                      Combustible
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('combustible')}" th:errors="*{combustible}">
+                    Seleccione un combustible
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="kilometraje" class="form-label">Kilometraje</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="kilometraje" th:field="*{kilometraje}"
+                           min="0" required>
+                    <span class="input-group-text">km</span>
+                  </div>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('kilometraje')}" th:errors="*{kilometraje}">
+                    Ingrese un kilometraje válido
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="disponible" class="form-label">Disponibilidad</label>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="disponible" th:field="*{disponible}">
+                    <label class="form-check-label" for="disponible">
+                      <span th:text="${vehiculo.disponible ? 'Disponible' : 'No Disponible'}">Disponible</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="activo" class="form-label">Estado</label>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="activo" th:field="*{activo}">
+                    <label class="form-check-label" for="activo">
+                      <span th:text="${vehiculo.activo ? 'Activo' : 'Inactivo'}">Activo</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                  </button>
+                  <a href="/admin/vehiculos" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancelar
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+    // Actualizar etiquetas de los switches
+    $(document).ready(function() {
+      $('#disponible').change(function() {
+        $(this).next('label').find('span').text(this.checked ? 'Disponible' : 'No Disponible');
+      });
+
+      $('#activo').change(function() {
+        $(this).next('label').find('span').text(this.checked ? 'Activo' : 'Inactivo');
+      });
+    });
+  </script>
+</body>
+</html>
